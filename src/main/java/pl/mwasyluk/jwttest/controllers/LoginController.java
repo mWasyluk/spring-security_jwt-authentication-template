@@ -1,9 +1,8 @@
 package pl.mwasyluk.jwttest.controllers;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,7 +22,7 @@ public class LoginController {
     private final JwtUtils jwtUtils;
     
     @PostMapping( "/login" )
-    public ResponseEntity<String> login( @RequestBody @Valid AuthenticationDetails authenticationDetails ) {
+    public ResponseEntity<String> login( @RequestBody @Valid AuthenticationDetails authenticationDetails, HttpServletResponse response ) {
         // authenticate user
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -33,10 +32,8 @@ public class LoginController {
         // retrieve user details from the authentication
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         
-        // return a JWT within the Authorization header
-        return ResponseEntity
-                .status( HttpStatus.OK )
-                .header( HttpHeaders.AUTHORIZATION, "Bearer " + jwtUtils.generateToken( userDetails ) )
-                .body( "Hello, " + userDetails.getUsername() + "!" );
+        // append authentication cookie
+        jwtUtils.appendJwtCookieToResponse( response, jwtUtils.generateToken( userDetails ) );
+        return ResponseEntity.ok( "Hello, " + userDetails.getUsername() + "!" );
     }
 }

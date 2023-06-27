@@ -6,7 +6,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,22 +26,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     
     @Override
     protected void doFilterInternal( HttpServletRequest request, HttpServletResponse response, FilterChain filterChain ) throws ServletException, IOException {
-        // get the authorization header from the request and validate it
-        String header = request.getHeader( HttpHeaders.AUTHORIZATION );
-        if ( header == null || !header.startsWith( "Bearer " ) ) {
-            filterChain.doFilter( request, response );
-            return;
-        }
-        
-        // retrieve a JWT from the header
-        String tokenString = header.split( " " )[1];
-        if ( tokenString.isEmpty() ) {
+        // extract jwt from cookie
+        String jwt = jwtUtils.extractJwtFromRequest( request );
+        if ( jwt == null || jwt.isEmpty() ) {
             filterChain.doFilter( request, response );
             return;
         }
         
         // verify the retrieved JWT and find the user by their username
-        String username = jwtUtils.extractUsername( tokenString );
+        String username = jwtUtils.extractUsername( jwt );
         UserDetails userDetails = userDetailsService.loadUserByUsername( username );
         
         // create the authentication token and pass it to the security context
@@ -57,5 +49,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // continue filtering
         filterChain.doFilter( request, response );
     }
-    
 }

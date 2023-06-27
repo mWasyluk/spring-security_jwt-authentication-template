@@ -1,26 +1,16 @@
 package pl.mwasyluk.jwttest.security.jwt;
 
 import com.auth0.jwt.algorithms.Algorithm;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
-@Configuration
+@Component
+@RequiredArgsConstructor
 public class JwtConfig {
     
-    @Value( "${security.jwt.issuer}" )
-    private String issuer;
+    private final JwtProperties properties;
     
-    @Value( "${security.jwt.secret}" )
-    private String secret;
-    
-    @Bean
-    String jwtIssuer() {
-        return issuer;
-    }
-    
-    @Bean
-    Algorithm jwtAlgorithm() {
-        return Algorithm.HMAC256( secret );
+    public Algorithm getHashingAlgorithm() {
+        return Algorithm.HMAC256( properties.getSecret() );
     }
 }
